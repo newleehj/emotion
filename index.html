@@ -1,0 +1,85 @@
+<!DOCTYPE html>
+<html lang="ko">
+<head>
+<meta charset="utf-8">
+<meta name="viewport" content="width=device-width, initial-scale=1, viewport-fit=cover">
+<title>내 마음 감정 차트</title>
+<link href="https://fonts.googleapis.com/css2?family=Jua&display=swap" rel="stylesheet">
+<style>
+:root{box-sizing:border-box;padding-top:env(safe-area-inset-top,0px);padding-bottom:env(safe-area-inset-bottom,0px);
+--bg:#fff8e7;--ink:#3b2f2f;--sheet:#ffffff;--sub:#7a6a5f}
+:root:not([data-theme="light"]){}
+@media (prefers-color-scheme:dark){:root:not([data-theme="light"]){--bg:#241f2e;--ink:#fdf3e3;--sheet:#352e45;--sub:#c9bcd9}}
+:root[data-theme="dark"]{--bg:#241f2e;--ink:#fdf3e3;--sheet:#352e45;--sub:#c9bcd9}
+html{scroll-padding-top:env(safe-area-inset-top,0px)}
+*,*::before,*::after{box-sizing:inherit}
+body{margin:0;background:var(--bg);color:var(--ink);font-family:'Jua','Apple SD Gothic Neo','Malgun Gothic',sans-serif;min-height:100vh}
+main{max-width:520px;margin:0 auto;padding:20px 16px 40px}
+h1{font-size:1.7rem;margin:8px 0 4px;text-align:center}
+.hint{text-align:center;color:var(--sub);margin:0 0 20px;font-size:1.05rem}
+.grid{display:grid;grid-template-columns:repeat(3,1fr);gap:12px}
+.card{border:4px solid rgba(0,0,0,.12);border-radius:24px;padding:14px 4px 12px;cursor:pointer;font-family:inherit;color:#3b2f2f;
+display:flex;flex-direction:column;align-items:center;gap:6px;transition:transform .15s}
+.card:active{transform:scale(.93)}
+.card:focus-visible{outline:4px solid var(--ink);outline-offset:2px}
+.card .e{font-size:3rem;line-height:1}
+.card .n{font-size:1.25rem}
+#ov{position:fixed;inset:0;background:rgba(0,0,0,.5);display:none;align-items:flex-end;justify-content:center;z-index:9}
+#ov.on{display:flex}
+.sheet{background:var(--sheet);width:100%;max-width:520px;max-height:88%;overflow-y:auto;border-radius:28px 28px 0 0;padding:22px 20px calc(24px + env(safe-area-inset-bottom,0px));animation:up .25s ease-out}
+@keyframes up{from{transform:translateY(40px);opacity:0}to{transform:none;opacity:1}}
+@media (prefers-reduced-motion:reduce){.sheet{animation:none}.card{transition:none}}
+.head{display:flex;align-items:center;gap:14px;padding:14px;border-radius:20px;color:#3b2f2f}
+.head .e{font-size:3.6rem;line-height:1}
+.head .n{font-size:2rem}
+.box{margin-top:14px;padding:12px 14px;border-radius:16px;background:rgba(127,127,127,.14);font-size:1.1rem;line-height:1.6}
+.box b{display:block;margin-bottom:2px}
+.close{margin-top:18px;width:100%;padding:12px;border:0;border-radius:16px;font:inherit;font-size:1.2rem;background:var(--ink);color:var(--bg);cursor:pointer}
+
+.tab{display:flex;align-items:center;justify-content:space-between;width:100%;margin-top:12px;padding:14px 16px;border:3px solid rgba(0,0,0,.12);border-radius:18px;font:inherit;font-size:1.2rem;color:#3b2f2f;cursor:pointer}
+.tab:focus-visible{outline:4px solid var(--ink);outline-offset:2px}
+.tab.on{border-color:var(--ink)}
+.txt{display:none;margin-top:6px;padding:14px 16px;border-radius:16px;background:rgba(127,127,127,.14);font-size:1.2rem;line-height:1.7}
+.txt.on{display:block}
+</style>
+</head>
+<body>
+<main>
+<h1>🌈 내 마음 감정 차트</h1>
+<p class="hint">궁금한 감정의 그림이나 글자를 눌러 보세요!</p>
+<div class="grid" id="grid"></div>
+</main>
+<div id="ov" role="dialog" aria-modal="true"><div class="sheet" id="sheet"></div></div>
+<script>
+var D=[
+{n:"기쁨",e:"😄",c:"#ffe27a",d:"기쁨은 좋은 일이 생겼을 때 마음이 환하고 신나는 느낌이에요. 웃음이 저절로 나오고 몸이 가벼워져요.",w:"좋아하는 친구와 놀 때, 시험을 잘 봤을 때, 칭찬을 받았을 때",t:"기쁜 일을 가족이나 친구에게 이야기해 보세요. 기쁨이 두 배가 돼요!"},
+{n:"슬픔",e:"😢",c:"#a9d3ff",d:"슬픔은 소중한 것을 잃었거나 속상한 일이 있을 때 마음이 무겁고 눈물이 나는 느낌이에요.",w:"아끼는 장난감이 망가졌을 때, 친구와 헤어질 때, 반려동물이 아플 때",t:"울고 싶으면 울어도 괜찮아요. 믿는 어른에게 안아 달라고 말해 보세요."},
+{n:"화남",e:"😡",c:"#ff9b8f",d:"화남은 억울하거나 누가 내 마음을 몰라줄 때 얼굴이 뜨거워지고 소리치고 싶은 느낌이에요.",w:"친구가 내 물건을 허락 없이 가져갔을 때, 약속을 어겼을 때",t:"숨을 크게 세 번 쉬고, 천천히 10까지 세어 보세요. 그다음에 내 마음을 말로 얘기해요."},
+{n:"짜증",e:"😒",c:"#ffc48a",d:"짜증은 마음에 안 드는 일이 자꾸 생겨서 콕콕 찌르는 것처럼 불편한 느낌이에요. 화보다는 작지만 계속 신경 쓰여요.",w:"동생이 계속 말을 걸 때, 숙제가 잘 안 풀릴 때, 날씨가 너무 더울 때",t:"잠깐 그 자리에서 벗어나 물을 마시거나 스트레칭을 해 보세요."},
+{n:"소심",e:"🙈",c:"#d9c2f0",d:"소심은 새로운 일이나 사람 앞에서 부끄럽고 조심스러워서 선뜻 나서기 어려운 느낌이에요.",w:"발표할 때, 처음 만난 친구에게 말을 걸 때, 손을 들고 싶은데 망설일 때",t:"작은 목소리로 먼저 시작해 보세요. 조금씩 하면 용기가 쑥쑥 자라요!"},
+{n:"불안",e:"😰",c:"#b9e4d6",d:"불안은 아직 일어나지 않은 일이 걱정되어서 가슴이 두근두근하고 안절부절못하는 느낌이에요.",w:"내일 시험이 걱정될 때, 혼자 있는 밤, 병원에 가기 전",t:"걱정을 종이에 적어 보고, 어른에게 이야기해 보세요. 말하면 마음이 가벼워져요."},
+{n:"심심해",e:"🥱",c:"#cfe8a8",d:"심심함은 할 일이 없거나 재미있는 것이 없어서 시간이 천천히 가는 것 같은 느낌이에요.",w:"비 오는 날 집에 있을 때, 친구가 없을 때, 놀 거리가 없을 때",t:"그림 그리기, 책 읽기, 몸 움직이기 중에 하나를 해 보세요. 새로운 놀이를 만들어도 좋아요!"},
+{n:"당황",e:"😳",c:"#ffb8d1",d:"당황은 갑자기 생각지 못한 일이 생겨서 머리가 하얘지고 어찌할 바를 모르겠는 느낌이에요.",w:"발표하다가 말을 잊었을 때, 넘어졌을 때, 준비물을 안 가져왔을 때",t:"천천히 숨을 쉬고 '괜찮아, 다시 하면 돼' 하고 속으로 말해 보세요."},
+{n:"부러움",e:"🥺",c:"#ffd3a0",d:"부러움은 다른 사람이 가진 것이나 잘하는 것을 보고 나도 갖고 싶고 나도 잘하고 싶은 느낌이에요.",w:"친구가 새 자전거를 탈 때, 친구가 달리기를 1등으로 할 때",t:"부러운 마음은 내가 원하는 것을 알려 주는 힌트예요. 나도 연습해 보거나, 친구에게 축하해 주세요."}
+];
+var g=document.getElementById('grid'),ov=document.getElementById('ov'),sh=document.getElementById('sheet');
+D.forEach(function(x,i){
+var b=document.createElement('button');b.className='card';b.style.background=x.c;
+b.innerHTML='<span class="e">'+x.e+'</span><span class="n">'+x.n+'</span>';
+b.onclick=function(){open_(i)};g.appendChild(b)});
+function open_(i){var x=D[i];
+var T=[['💬 어떤 마음일까요?',x.d],['📍 이럴 때 느껴요',x.w],['💡 이렇게 해 보세요',x.t]];
+var h='<div class="head" style="background:'+x.c+'"><span class="e">'+x.e+'</span><span class="n">'+x.n+'</span></div>';
+T.forEach(function(t,k){h+='<button class="tab" data-k="'+k+'" style="background:'+x.c+'"><span>'+t[0]+'</span></button><div class="txt" id="t'+k+'">'+t[1]+'</div>'});
+sh.innerHTML=h+'<button class="close" id="cl">닫기</button>';
+sh.querySelectorAll('.tab').forEach(function(b){b.onclick=function(){
+var t=document.getElementById('t'+b.dataset.k),was=t.classList.contains('on');
+sh.querySelectorAll('.txt,.tab').forEach(function(e){e.classList.remove('on')});
+if(!was){t.classList.add('on');b.classList.add('on')}}});
+ov.classList.add('on');document.getElementById('cl').onclick=close_;document.getElementById('cl').focus()}
+function close_(){ov.classList.remove('on')}
+ov.onclick=function(e){if(e.target===ov)close_()};
+document.addEventListener('keydown',function(e){if(e.key==='Escape')close_()});
+</script>
+</body>
+</html>
